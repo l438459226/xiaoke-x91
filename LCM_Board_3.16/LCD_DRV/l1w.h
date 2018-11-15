@@ -1,0 +1,90 @@
+
+
+#ifndef _L1W_H_
+#define _L1W_H_
+
+#include "stm32f10x.h"
+
+//GetFlickerValue的返回值定義
+#define FV_OLD		0x00	//獲取的值是舊值，上次已獲取過
+#define FV_NEW 		0X01 	//獲取的值是新值
+#define FV_ERROR	0xFF	//獲取錯誤，可能是通訊錯誤
+
+//LOGS文本操作函數返回值宏定義
+#define LGS_FAIL 	0XFF    //函數操作失敗
+#define LGS_FULFIL	0X00	//函數操作完成
+
+//LOGS文本顯示字體色彩宏定义
+#define LGST_RED    	0XF800
+#define LGST_GREEN  	0X07E0
+#define LGST_BLUE   	0X001F
+#define LGST_WHITE      0XFFFF
+
+
+///////////////////////////////////////////////
+
+/*
+*函數名：L1WInit
+*描述  ：L1W通訊初始化
+*参数  ：无
+*返回  ：無
+*/
+extern void L1WInit(void);
+
+/*
+*函數名：L1WGetFlickerValue
+*描述  ：获取Flicker值。
+         注意：获取到的Flicker值是前100ms的值，即這個值体現的是前100ms的闪烁情況，
+		       並非當前的闪烁情況
+
+*参数  ：flicker_pct - 保存flicker 百分比值的变量地址.
+             *flicker_pct值的單位是0.1%。如 *flicker_pct=100，即表示=10.0%.
+	     flicer_db - 保存flicker 單位為dB的值的变量地址。
+		     *flicker_db 值的單位是0.1dB。如 *flicker_db= -100，即表示=-10.0dB。
+		 注意：這兩個参数表示的是前100ms的Flicker值。
+
+*返回  ：状态值。
+         =FV_OLD：获取的值是旧值，上次已获取过
+		 =FV_NEW：获取的值是新值 （注意，即使是新值也是前100ms的fliker情況）
+		 =FV_ERROR：获取錯誤，可能是通訊錯誤
+
+*例子  ：
+		unsigned int flicker_tcp;
+		int flicker_db;   //這個是有符号整型变量
+		if(FV_NEW == L1WGetFlickerValue(&flicker_tcp, &flicker_db)) //传入两个变量的地址;
+		{										                   //以返回值判断flicker值是否是新值
+			...... //用户程序
+		}
+*/
+extern unsigned int L1WGetFlickerValue(unsigned int *flicker_pct, int *flicker_db);
+
+/*
+*函數名：L1WLogsDisplayString
+*描述  ：在LOGS文本框显示一串字符。LOGS文本框可显示16列、3行 共16*3=48个字符，
+*参数  ：x：列坐标，值域0~15
+         y：行坐标，值域0~2
+		 color：字体颜色，格式RGB565，可用上面的宏定義
+		        =LGST_RED   -> 字體為紅色
+				=LGST_GREEN -> 字體為綠色
+				=LGST_BLUE  -> 字體為藍色
+				=LGST_WHITE -> 字體為白色
+		 str：指向要顯示的字符串地址
+*返回  ：返回的是函數操作狀態
+		 =LGS_FAIL：函數操作失敗，可能通讯失败
+		 =LGS_FULFIL：函數操作完成
+*/
+extern unsigned int L1WLogsDisplayString(unsigned int x, unsigned int y, uint16_t color, char *str);
+
+/*
+*函數名：L1WLogsClear
+*描述  ：清除LOGS文本框显示的字符
+*参数  ：无
+*返回  ：返回的是函數操作狀態
+		 =LGS_FAIL：函數操作失敗，可能通讯失败
+		 =LGS_FULFIL：函數操作完成
+*/
+extern unsigned int L1WLogsClear(void);
+
+#endif
+
+

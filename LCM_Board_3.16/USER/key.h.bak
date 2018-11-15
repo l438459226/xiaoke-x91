@@ -1,0 +1,93 @@
+/******************************* 广州天码电子 *********************************
+ * 文件名   ：key.h        
+ * 作者     ：天码电子
+ * 版本     ：KEY_7K1E_V01_02
+ * 完成日期 ：2014-10-17 
+ * 描述     ：鍵盤盒程序，實現按鍵掃描、LED指示燈控制、旋轉編碼器輸入
+ * *注意*** ：当使能了旋转编码器， KEY_5和KEY_6按键不可用，
+              KeyLED5_ON()和KeyLED6_ON()函数也不可用，看下面Key_Init函数的注释
+ * 修改记录 ：|    作者    |   日期    |    版本    |    描述    |
+ *				天码电子    2014-08-13	KEY_7K1E_V01_01
+ 				天码电子    2014-10-17	KEY_7K1E_V01_02	 修改上一版本LED2与LED3调反的问题			
+*******************************************************************************/
+
+#ifndef _KEY_H_
+#define _KEY_H_
+
+#include "stm32f10x.h"
+
+//按鍵值宏定義
+#define KEY_1 		0x01	//確認
+#define KEY_2 		0x04	//上翻
+#define KEY_3 		0x02	//下翻
+#define KEY_4 		0x08	//显示开关
+#define KEY_5       0x10	//加   -注意若使能了旋转编码器此按键不可用，看下面Key_Init函数的注释
+#define KEY_6		0X20	//减   -注意若使能了旋转编码器此按键不可用，看下面Key_Init函数的注释 
+#define KEY_7		0X40	//备用
+#define KEY_NULL 	0x00
+
+
+//旋轉編碼器值宏定義
+#define SW_NULL 0X00
+#define SW_CCW  0X01 //逆时针
+#define SW_CW 	0X02 //顺时针
+
+//键盘初始化参数的枚举类型
+typedef enum
+{
+    ENCODER_EN,   //使能旋转编码器，键盘上的KEY_5和KEY_6按键不可用，且KeyLED5_ON()和KeyLED6_ON()函数也不可用；键盘盒拨动开关要拨向“旋钮”
+	ENCODER_DI,	  //禁用旋转编码器，按键KEY_5和KEY_6可用,KeyLED5_ON()和KeyLED6_ON()函数可用，键盘盒拨动开关要拨向“按键”
+}KeyInitType;
+
+////////////////////////////////////////////////////////////////////////
+
+
+/*
+*函數名：Key_Init
+*描述  ：鍵盤 LED指示燈 旋轉編碼器的初始化
+*参数  ：参数类型是枚举类型 KeyInitType，参看上面的定义
+         ENCODER_EN - 使能旋转编码器，键盘上的KEY_5和KEY_6按键不可用，
+		              且KeyLED5_ON()和KeyLED6_ON()函数也不可用；键盘盒拨动开关要拨向“旋钮”
+         ENCODER_DI - 禁用旋转编码器，按键KEY_5和KEY_6可用,KeyLED5_ON()和KeyLED6_ON()函数可用，
+		              键盘盒拨动开关要拨向“按键”
+*返回值：无
+*/
+extern void Key_Init(KeyInitType key_enum);
+
+
+/*按鍵控制變量和掃描函數*/
+extern unsigned int KeyTrg;		//用来判断单击
+extern unsigned int KeyCont;	//用来判断是否一直按着
+extern void Key_Read(void);     //间隔20ms调用一次
+
+/*LED指示燈控制*/
+extern void KeyLED1_ON(void);
+extern void KeyLED2_ON(void);
+extern void KeyLED3_ON(void);
+extern void KeyLED4_ON(void);
+extern void KeyLED5_ON(void);   //注意若使能了旋转编码器此函数不可用，看上面Key_Init函数的注释
+extern void KeyLED6_ON(void);	//注意若使能了旋转编码器此函数不可用，看上面Key_Init函数的注释
+extern void KeyLED7_ON(void);
+extern void KeyLED1_OFF(void);
+extern void KeyLED2_OFF(void);
+extern void KeyLED3_OFF(void);
+extern void KeyLED4_OFF(void);
+extern void KeyLED5_OFF(void);
+extern void KeyLED6_OFF(void);
+extern void KeyLED7_OFF(void);
+
+/*
+*函數名：Encoder_Read
+*描述  ：读取旋转编码器状态，此函數要快速循環調用，在主函數的大循環中使用
+         若初始化时禁用了旋转编码器，调用此函数将一直返回SW_NULL
+*参数  ：无
+*返回值：用上面的宏定義
+         = SW_CCW 逆時針旋轉
+         = SW_CW 順時針旋轉
+		 = SW_NULL 无旋转，若初始化时禁用了旋转编码器，调用此函数将一直返回SW_NULL
+*/
+extern unsigned int Encoder_Read(void);
+
+#endif
+
+/******************************* 广州天码电子 *********************************/

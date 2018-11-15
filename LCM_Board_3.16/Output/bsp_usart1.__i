@@ -1,0 +1,5 @@
+-c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork -I.\FWlib\inc -I.\USER -I.\CMSIS -I.\fatfs -I.\LCD_DRV -I.\USER\User\sdcard -I.\USER\User\usart -I.\FWlib\CMSIS -I.\STM32_USB-FS-Device_Driver\inc -I.\HID -I.\USER\User\USMART -I.\SYSTEM\delay -I.\MALLOC 
+-I C:\Keil\ARM\RV31\INC 
+-I C:\Keil\ARM\CMSIS\Include 
+-I C:\Keil\ARM\Inc\ST\STM32F10x 
+-DUSE_STDPERIPH_DRIVER -DSTM32F10X_HD -o ".\Output\bsp_usart1.o" --omf_browse ".\Output\bsp_usart1.crf" --depend ".\Output\bsp_usart1.d" "USER\User\usart\bsp_usart1.c"

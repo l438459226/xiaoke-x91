@@ -1,0 +1,1 @@
+-c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork -I.\FWlib\inc -I.\USER -I.\CMSIS -I.\fatfs -I.\LCD_DRV -I "C:\Keil4\ARM\INC" -I "C:\Keil4\ARM\INC\ST\STM32F10x" -DUSE_STDPERIPH_DRIVER -DSTM32F10X_HD -o ".\Output\l1w.o" --omf_browse ".\Output\l1w.crf" --depend ".\Output\l1w.d" "LCD_DRV\l1w.c"

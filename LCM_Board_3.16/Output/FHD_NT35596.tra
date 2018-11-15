@@ -1,0 +1,71 @@
+*** Creating Trace Output File '.\Output\FHD_NT35596.tra' Ok.
+### Preparing for ADS-LD.
+### Creating ADS-LD Command Line
+### List of Objects: adding '".\output\startup_stm32f10x_hd.o"'
+### List of Objects: adding '".\output\main.o"'
+### List of Objects: adding '".\output\stm32f10x_it.o"'
+### List of Objects: adding '".\output\systick.o"'
+### List of Objects: adding '".\output\ssd2828.o"'
+### List of Objects: adding '".\output\in_img.o"'
+### List of Objects: adding '".\USER\key.lib"'
+### List of Objects: adding '".\output\showtext.o"'
+### List of Objects: adding '".\output\gxnussd2828.o"'
+### List of Objects: adding '".\output\bmp.o"'
+### List of Objects: adding '".\output\bsp_sdio_sdcard.o"'
+### List of Objects: adding '".\output\bsp_usart1.o"'
+### List of Objects: adding '".\output\sdcard.o"'
+### List of Objects: adding '".\output\user.o"'
+### List of Objects: adding '".\output\gxnu.o"'
+### List of Objects: adding '".\output\delay.o"'
+### List of Objects: adding '".\output\stm32f10x_fsmc.o"'
+### List of Objects: adding '".\output\stm32f10x_gpio.o"'
+### List of Objects: adding '".\output\stm32f10x_sdio.o"'
+### List of Objects: adding '".\output\stm32f10x_usart.o"'
+### List of Objects: adding '".\output\stm32f10x_dma.o"'
+### List of Objects: adding '".\output\misc.o"'
+### List of Objects: adding '".\output\stm32f10x_tim.o"'
+### List of Objects: adding '".\output\stm32f10x_spi.o"'
+### List of Objects: adding '".\output\stm32f10x_i2c.o"'
+### List of Objects: adding '".\output\stm32f10x_rcc.o"'
+### List of Objects: adding '".\output\stm32f10x_flash.o"'
+### List of Objects: adding '".\output\stm32f10x_exti.o"'
+### List of Objects: adding '".\output\core_cm3.o"'
+### List of Objects: adding '".\output\system_stm32f10x.o"'
+### List of Objects: adding '".\output\diskio.o"'
+### List of Objects: adding '".\output\ff.o"'
+### List of Objects: adding '".\LCD_DRV\lcd_drv.lib"'
+### List of Objects: adding '".\output\usb_core.o"'
+### List of Objects: adding '".\output\usb_init.o"'
+### List of Objects: adding '".\output\usb_int.o"'
+### List of Objects: adding '".\output\usb_mem.o"'
+### List of Objects: adding '".\output\usb_regs.o"'
+### List of Objects: adding '".\output\usb_sil.o"'
+### List of Objects: adding '".\output\hw_config.o"'
+### List of Objects: adding '".\output\usb_desc.o"'
+### List of Objects: adding '".\output\usb_endp.o"'
+### List of Objects: adding '".\output\usb_istr.o"'
+### List of Objects: adding '".\output\usb_prop.o"'
+### List of Objects: adding '".\output\usb_pwr.o"'
+### List of Objects: adding '".\output\pc_com.o"'
+### List of Objects: adding '".\output\usmart.o"'
+### List of Objects: adding '".\output\usmart_config.o"'
+### List of Objects: adding '".\output\usmart_str.o"'
+### List of Objects: adding '".\output\yt70f21x0.o"'
+### List of Objects: adding '".\output\yt52f10a1.o"'
+### List of Objects: adding '".\output\malloc.o"'
+### ADS-LD Command completed:
+--cpu Cortex-M3 ".\output\startup_stm32f10x_hd.o" ".\output\main.o" ".\output\stm32f10x_it.o" ".\output\systick.o" ".\output\ssd2828.o" ".\output\in_img.o" E:\workoffer\LCM_Board_3.16\USER\key.lib ".\output\showtext.o" ".\output\gxnussd2828.o" ".\output\bmp.o" ".\output\bsp_sdio_sdcard.o" ".\output\bsp_usart1.o" ".\output\sdcard.o" ".\output\user.o" ".\output\gxnu.o" ".\output\delay.o" ".\output\stm32f10x_fsmc.o" ".\output\stm32f10x_gpio.o" ".\output\stm32f10x_sdio.o" ".\output\stm32f10x_usart.o" ".\output\stm32f10x_dma.o" ".\output\misc.o" ".\output\stm32f10x_tim.o" ".\output\stm32f10x_spi.o" ".\output\stm32f10x_i2c.o" ".\output\stm32f10x_rcc.o" ".\output\stm32f10x_flash.o" ".\output\stm32f10x_exti.o" ".\output\core_cm3.o" ".\output\system_stm32f10x.o" ".\output\diskio.o" ".\output\ff.o" E:\workoffer\LCM_Board_3.16\LCD_DRV\lcd_drv.lib ".\output\usb_core.o" ".\output\usb_init.o" ".\output\usb_int.o" ".\output\usb_mem.o" ".\output\usb_regs.o" ".\output\usb_sil.o" ".\output\hw_config.o" ".\output\usb_desc.o" ".\output\usb_endp.o" ".\output\usb_istr.o" ".\output\usb_prop.o" ".\output\usb_pwr.o" ".\output\pc_com.o" ".\output\usmart.o" ".\output\usmart_config.o" ".\output\usmart_str.o" ".\output\yt70f21x0.o" ".\output\yt52f10a1.o" ".\output\malloc.o" 
+--library_type=microlib --strict --scatter ".\Output\FHD_NT35596.sct" 
+--summary_stderr --info summarysizes --map --xref --callgraph --symbols 
+--info sizes --info totals --info unused --info veneers 
+ --list ".\Listing\FHD_NT35596.map" -o .\Output\FHD_NT35596.axf### Preparing Environment (PrepEnvAds)
+### ADS-LD Output File: '.\Output\FHD_NT35596.axf'
+### ADS-LD Command File: '.\Output\FHD_NT35596.lnp'
+### Checking for dirty Components...
+### Creating CmdFile '.\Output\FHD_NT35596.lnp', Handle=0x0000044C
+### Writing '.lnp' file
+### ADS-LD Command file '.\Output\FHD_NT35596.lnp' is ready.
+### ADS-LD: About to start ADS-LD Thread.
+### ADS-LD: executed with 1 errors
+### Updating obj list
+### LDADS_file() completed.

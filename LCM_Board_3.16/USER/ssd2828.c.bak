@@ -1,0 +1,673 @@
+
+
+#include "ssd2828.h"
+
+
+/*---------------------------模擬SPI接口引腳宏定義----------------------------*/
+#define SPI_SDI_1     GPIO_SetBits(GPIOE, GPIO_Pin_2)
+#define SPI_SDI_0     GPIO_ResetBits(GPIOE, GPIO_Pin_2) 
+#define SPI_SCLK_1    GPIO_SetBits(GPIOE, GPIO_Pin_3)
+#define SPI_SCLK_0    GPIO_ResetBits(GPIOE, GPIO_Pin_3)
+#define SPI_SDO		  GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_1)  //输入
+//#define SPI_CS_1      GPIO_SetBits(GPIOE, GPIO_Pin_6)
+//#define SPI_CS_0      GPIO_ResetBits(GPIOE, GPIO_Pin_6)
+//#define SPI_CS_1      {GPIO_SetBits(GPIOE, GPIO_Pin_6);GPIO_SetBits(GPIOB, GPIO_Pin_5);}
+//#define SPI_CS_0      {GPIO_ResetBits(GPIOE, GPIO_Pin_6);GPIO_ResetBits(GPIOB, GPIO_Pin_5);}  
+//#define SPIB_CS_1      {GPIO_SetBits(GPIOB, GPIO_Pin_5);}
+//#define SPIB_CS_0      {GPIO_ResetBits(GPIOB, GPIO_Pin_5);}  
+
+
+#define SSD_RESET_1   GPIO_SetBits(GPIOE, GPIO_Pin_0);
+#define SSD_RESET_0   GPIO_ResetBits(GPIOE, GPIO_Pin_0)	  //RESET PE0
+
+#define SSD_SHUT_1    GPIO_SetBits(GPIOE, GPIO_Pin_5)
+#define SSD_SHUT_0    GPIO_ResetBits(GPIOE, GPIO_Pin_5)   //SHUT  PE5
+
+/*---------------------------LP or HS or Video------------------------------*/
+#define LP 0
+#define HS 1
+#define VD 2
+unsigned int mode;
+
+/*----------------------------------------------------------------------------*/
+
+void SSD2828GPIOConfig(void)
+{
+	GPIO_InitTypeDef GPIO_InitStructure;
+	
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE|RCC_APB2Periph_GPIOB, ENABLE );
+
+
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0|GPIO_Pin_2|GPIO_Pin_3|	 //SDI,CS,RESET,SCLK
+	                              GPIO_Pin_4|GPIO_Pin_5|GPIO_Pin_6;	  
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;  
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(GPIOE, &GPIO_InitStructure);
+
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;  
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;  
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(GPIOB, &GPIO_InitStructure);
+  
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;                              //SDO
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+	GPIO_Init(GPIOE, &GPIO_InitStructure);
+
+//	SPIB_CS_1;
+}
+
+void SSD2828WriteCmd(unsigned char cmd)
+{   
+	unsigned char i;
+
+//	SPI_CS_0;
+	SPI_SDI_0; Delay_10us(2);  				 
+	SPI_SCLK_0;Delay_10us(2);
+    SPI_SCLK_1;Delay_10us(2);
+    
+     for (i=0;i<8;i++)
+     {
+		if((cmd&0x80)==0x80)SPI_SDI_1;
+		else  SPI_SDI_0;
+		
+		Delay_10us(2);
+		SPI_SCLK_0;
+		Delay_10us(2);
+		SPI_SCLK_1;
+		Delay_10us(2);
+		
+		cmd=cmd<<1;
+     }
+ //    SPI_CS_1;   
+	 Delay_10us(0);
+}
+
+void SSD2828WriteData(unsigned char dat)
+{   
+	unsigned char i;
+ //   SPI_CS_0;
+    SPI_SDI_1;
+	Delay_10us(2);
+     
+	SPI_SCLK_0;
+	Delay_10us(2);
+    SPI_SCLK_1;
+	Delay_10us(2);
+
+	for(i=0;i<8;i++)
+	{
+		if((dat&0x80)==0x80)
+		 	SPI_SDI_1;
+		else
+		 	SPI_SDI_0;
+		
+		Delay_10us(2);	
+		SPI_SCLK_0;
+		Delay_10us(2);
+		SPI_SCLK_1;
+		Delay_10us(2);
+		dat=dat<<1;
+	}
+ //   SPI_CS_1;	 
+	Delay_10us(2);   
+}
+
+//写2828寄存器 带两个8bit参数
+void SSD2828WriteReg(unsigned char cmd,unsigned char dat1,unsigned char dat2)
+{   
+	unsigned char i;
+//	SPI_CS_0;
+	SPI_SDI_0;
+	
+	SPI_SCLK_0;SPI_SCLK_0;SPI_SCLK_0;
+	SPI_SCLK_1;
+
+	for(i=0;i<8;i++)
+	{
+		if((cmd&0x80)==0x80){SPI_SDI_1;	}
+		else { SPI_SDI_0;}
+		SPI_SCLK_0;	SPI_SCLK_0;SPI_SCLK_0;
+		SPI_SCLK_1;
+		cmd=cmd<<1;
+	}
+                 
+    SPI_SDI_1;
+	SPI_SCLK_0;SPI_SCLK_0;SPI_SCLK_0;
+    SPI_SCLK_1;
+	for (i=0;i<8;i++)
+	{
+		if((dat2&0x80)==0x80)	{SPI_SDI_1;}
+		else	{ SPI_SDI_0; }
+		
+		SPI_SCLK_0;SPI_SCLK_0;SPI_SCLK_0;
+		SPI_SCLK_1;
+		
+		dat2=dat2<<1;
+	}
+
+
+	SPI_SDI_1;
+	SPI_SCLK_0;SPI_SCLK_0;SPI_SCLK_0;
+	SPI_SCLK_1;
+
+	for (i=0;i<8;i++)
+	{
+		if((dat1&0x80)==0x80)	{SPI_SDI_1;}
+		else	{ SPI_SDI_0;}
+		
+		SPI_SCLK_0;SPI_SCLK_0;SPI_SCLK_0;
+		SPI_SCLK_1;
+		dat1=dat1<<1;
+	}
+//	SPI_CS_1;  
+}
+
+//----------------------------------------------------------------------------------
+
+//DCS 短包写 。 
+//DT = 0x05, 0x15
+//n - 数据个数； 
+void SSD2828DcsShortWrite(unsigned char n)
+{
+	if(mode == LP)
+	{	
+		SSD2828WriteReg(0x00b7,0x02,0x50);	  //EOT Packet Enable,ECC CRC Check Enable, DCS, Short packer, LP
+	}
+	else if(mode == HS)
+	{
+		SSD2828WriteReg(0x00b7, 0x02, 0x50&0XEF|0X03); //EOT Packet Enable,ECC CRC Check Enable, DCS, Short packer, HS
+	} 
+	else if(mode == VD)
+	{
+		SSD2828WriteReg(0x00b7, 0x02|0x01, 0x50&0XEF|0X0B); //EOT Packet Enable,ECC CRC Check Disable, DCS, Short packer, HS Video
+	}
+	Delay_10us(10);
+	SSD2828WriteReg(0xbc,0x00,n);
+	SSD2828WriteReg(0xbd,0x00,0x00);
+	SSD2828WriteReg(0xbe,0x00,n);
+    SSD2828WriteCmd(0xbf);
+}
+
+//DCS 长包写操作
+//DT = 0X39
+//n 数据个数
+void SSD2828DcsLongWrite(unsigned long n)
+{
+	if(mode == LP)
+	{
+		SSD2828WriteReg(0x00b7,0x06,0x50);  //EOT Packet Enable,ECC CRC Check Enable, DCS Long Write, LP
+	}
+	else if(mode == HS)
+	{
+		SSD2828WriteReg(0x00b7,0x06, 0x50&0XEF|0X03);  //EOT Packet Enable,ECC CRC Check Enable, DCS Long Write, HS
+	}
+	else if(mode == VD)
+	{
+		SSD2828WriteReg(0x00b7, 0x06|0x01, 0x50&0XEF|0X0B);  //EOT Packet Enable,ECC CRC Check Disable, DCS Long Write, HS Video
+	}
+
+	Delay_10us(10);
+	SSD2828WriteReg(0xbc,n>>8,n);
+	SSD2828WriteReg(0xbd,n>>24,n>>16);
+	SSD2828WriteReg(0xbe,0x0f,0xff);
+    SSD2828WriteCmd(0xbf);
+}
+
+//Generic 短包写操作
+//DT = 0x03, 0x13, 0x23
+//n 参数的数量
+void SSD2828GenericShortWrite(unsigned char n)
+{
+  	
+
+	if(mode == LP)
+	{
+		SSD2828WriteReg(0x00b7,0x02,0x10); //EOT Packet Enable,ECC CRC Check Enable, Generic Short Write, LP
+	}
+	else if(mode == HS)
+	{
+		SSD2828WriteReg(0x00b7,0x02,0x10&0XEF|0X03);  //EOT Packet Enable,ECC CRC Check Enable, Generic Short Write, HS
+	}
+	else if(mode == VD)
+	{
+		SSD2828WriteReg(0x00b7,0x02|0x01,0x10&0XEF|0X0B);  //EOT Packet Enable,ECC CRC Check Disable, Generic Short Write, HS Video
+	}
+
+	Delay_10us(10);
+	SSD2828WriteReg(0xbc,0x00,n);
+	SSD2828WriteReg(0xbd,0x00,0x00);
+	SSD2828WriteReg(0xbe,0x00,n);
+    SSD2828WriteCmd(0xbf);
+}
+
+//Generic 长包写操作
+//DT = 0x29
+//n 参数的数量
+void SSD2828GenericLongWrite(unsigned long n)
+{
+  	if(mode == LP)
+	{	
+		SSD2828WriteReg(0x00b7,0x06,0x10); //EOT Packet Enable,ECC CRC Check Enable, Generic Long Write, LP; 
+	}
+	else if(mode == HS)
+	{
+		SSD2828WriteReg(0x00b7,0x06,0x10&0XEF|0X03); //EOT Packet Enable,ECC CRC Check Enable, Generic Long Write, HS;
+	}
+	else if(mode == VD)
+	{
+		SSD2828WriteReg(0x00b7,0x06|0X01,0x10&0XEF|0X0B);//EOT Packet Enable,ECC CRC Check Disable, Generic Long Write, HS Video
+	}
+	
+	Delay_10us(10);
+	SSD2828WriteReg(0xbc,n>>8,n);
+	SSD2828WriteReg(0xbd,n>>24,n>>16);
+	SSD2828WriteReg(0xbe,0x0f,0xff);
+    SSD2828WriteCmd(0xbf);
+}
+
+//HS模式 的 Generic 长包写操作 
+//DT = 0x29
+//n 参数的数量
+/*void SSD2828GenericLongWriteHS(unsigned long n)
+{
+  	SSD2828WriteReg(0x00b7,0x07,0x03);   //HS Generic Long Write; 
+	Delay_10us(10);
+	SSD2828WriteReg(0xbc,n>>8,n);
+	SSD2828WriteReg(0xbd,n>>24,n>>16);
+	SSD2828WriteReg(0xbe,0x0f,0xff);
+    SSD2828WriteCmd(0xbf);
+} */
+
+//----------------------------------------------------------------
+
+//ssd2828讀操作
+uint8_t SSD2828Read()
+{
+	unsigned int i;
+	uint8_t tmp = 0;
+//	SPI_CS_0;
+    Delay_10us(1);
+    for(i = 0; i < 8; i++)
+	{
+		SPI_SCLK_0;
+		Delay_10us(1);
+    	SPI_SCLK_1;
+		Delay_10us(1);
+        tmp <<= 1;
+		if(SPI_SDO) tmp |= 0x01;
+	}
+	
+//	SPI_CS_1; 
+
+	return tmp;
+}
+
+//讀2828寄存器 16bit的
+uint16_t SSD2828ReadReg(uint8_t reg)
+{
+    uint16_t tmp;
+	uint8_t data_l, data_h;
+	SSD2828WriteReg(0xd4,0x00,0xfa); //Set read command "FA" for 3 wire 8bit
+	SSD2828WriteCmd(reg);	//被读的寄存器地址
+    SSD2828WriteCmd(0xfa);	//讀命令
+
+	data_l = SSD2828Read();
+	data_h = SSD2828Read();
+
+	tmp = data_h;
+	tmp <<= 8;
+	tmp |= data_l;
+	
+	return tmp;	
+}
+
+
+/*******************************************************************************
+*函数名 : SSD2828DcsReadDT06
+*描述   : DCS READ, no parameters DT=0X06
+*参数   : adr - LCM 驱动IC寄存器地址
+          l   - 讀的长度 单位Byte
+		  p   - 保存读出的数据的数组
+*返回   : 讀狀態 成功或失敗
+          MIPI_READ_FAIL 讀失敗
+		  MIPI_READ_SUCCEED 讀成功
+*调用   : 外部调用
+*******************************************************************************/
+unsigned int SSD2828DcsReadDT06(uint8_t adr, uint16_t l, uint8_t *p)
+{
+	uint16_t state;
+	unsigned int i;
+	unsigned int timeout_cnt=0;
+
+	do
+	{
+		if(mode == LP)
+		{
+			SSD2828WriteReg(0x00b7,0x03,0xc2);		//LP DCS read
+		}
+		else if(mode == HS)
+		{
+			SSD2828WriteReg(0x00b7,0x03,0xc2&0XEF|0X03);
+		}
+		else if(mode == VD)
+		{
+			SSD2828WriteReg(0x00b7,0x03,0xc2&0XEF|0X0B);
+		}
+
+		SSD2828WriteReg(0x00bb,0x00,8);			//PL clock
+		SSD2828WriteReg(0x00c1,l>>8,l);		//Maximum Return Size
+		SSD2828WriteReg(0x00c0,0x00,0x01);		//取消SSD2828的操作？？
+		SSD2828WriteReg(0x00BC,0x00,0x01);
+		SSD2828WriteReg(0x00BF,0x00,adr);	   //把要讀的地址發送出去
+		Delay_ms(10);					   //讀需要一点点时间
+		state = SSD2828ReadReg(0xc6);		//读 ssd2828 的状态寄存器
+		
+		if(state & 0x01){break;}     //讀成功 跳出循環
+		else if(++timeout_cnt > 10){return MIPI_READ_FAIL;}		//超時 讀失敗
+	}while(1);	
+
+	SSD2828WriteCmd(0xff);			   //讀2828的0XFF寄存器，实际上不是个寄存器，只是假设从LCM读到的数据会存在0XFF
+	for(i = 0; i < l;)
+	{
+		SSD2828WriteCmd(0xfa);			   //讀命令
+		*p++ = SSD2828Read();
+		if(++i >= l){SSD2828Read(); break;}
+		*p++ = SSD2828Read();
+		++i;
+	}
+
+	return MIPI_READ_SUCCEED;
+}
+ 
+
+/*******************************************************************************
+*函数名 : SSD2828GenericReadDT14
+*描述   : Generic READ, 1 parameter; DT=0X14
+*参数   : adr - LCM 驱动IC寄存器地址
+          l   - 讀的长度 单位Byte
+		  p   - 保存读出的数据的数组
+*返回   : 讀狀態 成功或失敗
+          MIPI_READ_FAIL 讀失敗
+		  MIPI_READ_SUCCEED 讀成功
+*调用   : 外部调用
+*******************************************************************************/
+unsigned int SSD2828GenericReadDT14(uint8_t adr, uint16_t l, uint8_t *p)
+{
+	uint16_t state;
+	unsigned int i;
+	unsigned int timeout_cnt=0;
+
+	do
+	{
+		if(mode == LP)
+		{
+			SSD2828WriteReg(0x00b7,0x03,0x82);		//LP generic read
+		}
+		else if(mode == HS)
+		{
+			SSD2828WriteReg(0x00b7,0x03,0x82&0XEF|0X03);
+		}
+		else if(mode == VD)
+		{
+			SSD2828WriteReg(0x00b7,0x03,0x82&0XEF|0X0B);
+		}
+
+		SSD2828WriteReg(0x00bb,0x00,8);			//PL clock
+		SSD2828WriteReg(0x00c1,l>>8,l);		//Maximum Return Size
+		SSD2828WriteReg(0x00c0,0x00,0x01);		//取消SSD2828的操作？？
+		SSD2828WriteReg(0x00BC,0x00,1);		 // *参数个数 
+		SSD2828WriteReg(0x00BF,0x00,adr);	   //把要讀的地址發送出去
+		Delay_ms(10);					   //讀需要一点点时间
+		state = SSD2828ReadReg(0xc6);		//读 ssd2828 的状态寄存器
+
+		if(state & 0x01){break;}     //讀成功 跳出循環
+		else if(++timeout_cnt > 10){return MIPI_READ_FAIL;}		//超時 讀失敗
+	}while(1);	//ssd2828的状态不对 就全部重来
+
+	SSD2828WriteCmd(0xff);			   //讀2828的0XFF寄存器，实际上不是个寄存器，只是假设从LCM读到的数据会存在0XFF
+	for(i = 0; i < l;)
+	{
+		SSD2828WriteCmd(0xfa);			   //讀命令
+		*p++ = SSD2828Read();
+		if(++i >= l){SSD2828Read(); break;}
+		*p++ = SSD2828Read();
+		++i;
+	}
+
+	return MIPI_READ_SUCCEED;
+}
+
+
+
+void SSD2828LP()
+{
+	mode = LP;
+}
+
+void SSD2828Video()
+{
+	mode = VD;	   
+	SSD2828WriteReg(0x00b7,0x03,0x0B);//使能 video，24b,Short  TCLK做参考时钟	
+	SSD2828WriteReg(0x00b9,0x00,0x00); //关pLL
+
+	SSD2828WriteReg(0x00b1,Lcd_VSPW, Lcd_HSPW);
+	SSD2828WriteReg(0x00b2, Lcd_VBPD, Lcd_HBPD);
+	SSD2828WriteReg(0x00b3,Lcd_VFPD, Lcd_HFPD);
+
+
+   //	SSD2828WriteReg(0x00b1,2, Lcd_HSPW);
+//	SSD2828WriteReg(0x00b2,2, Lcd_HBPD);
+	//SSD2828WriteReg(0x00b3,8, Lcd_HFPD);
+
+
+	SSD2828WriteReg(0xb4,(Lcd_LCDH >> 8) & 0xff, Lcd_LCDH & 0xff);	
+	SSD2828WriteReg(0xb5,(Lcd_LCDV >> 8) & 0xff, Lcd_LCDV & 0xff);
+	SSD2828WriteReg(0x00b6,0x00,0x0B);	//24bpp burst mode
+//	SSD2828WriteReg(0x00b6,0x00, 0x07);	//24bpp Non burst mode with sync events	
+    SSD2828WriteReg(0x00b6,0x00, 0x03);	//24bpp Non burst mode PCLK下降沿锁存数据	
+
+//	SSD2828WriteReg(0xbb,0x00,6);			// LP Mode CLK =PLL /(LPD+1)/8 = x MHz
+//	SSD2828WriteReg(0x00b9,0x00,0x00); //关pLL
+	SSD2828WriteReg(0x00c9,0x23,0x02);
+	SSD2828WriteReg(0x00ca,0x23,0x01);
+	SSD2828WriteReg(0x00cb,0x05,0x10);
+	SSD2828WriteReg(0x00cc,0x10,0x05);
+
+	SSD2828WriteReg(0x00de,0x00,0x03);//4 lane mode
+//	SSD2828WriteReg(0x00de,0x00,0x01);//2 lane mode
+//	SSD2828WriteReg(0x00d6,0x00,0x04); ////设置RGB顺序?? 在视频模式下消隐期间发送的数据包的数量
+	SSD2828WriteReg(0x00d6,0x00,0x05);//设置RGB顺序?? 在视频模式下消隐期间发送的数据包的数量
+	SSD2828WriteReg(0x00c4,0x00,0x01); //Automatically perform BTA after the next write packe
+	//SSD2828WriteReg(0x00e9,0xff2f); //
+	SSD2828WriteReg(0x00eb,0x80,0x00);
+
+	Delay_ms(5);
+
+	SSD2828WriteReg(0x00ba,0x80, 27);  // PLL= fIN X NS = xMHz	   251 ~ 500
+	SSD2828WriteReg(0x00ba,0xc0, 38);//34  // PLL= fIN X NS = xMHz	   501 ~ 1000
+//	SSD2828WriteReg(0x00ba,0xc2, 65);  // PLL= fIN/2 X NS = xMHz	   501 ~ 1000
+	SSD2828WriteReg(0x00bb,0x00,0x06);//Clock Control Register 0/1 ;LP Clock Divider
+	SSD2828WriteReg(0x00b8,0x00,0x00); //
+	SSD2828WriteReg(0x00b7,0x03,0x0B);//  TCLK做参考时钟
+//	SSD2828WriteReg(0x00b7,0x03,0x2B);//  //使能 video，24b, Short Packet, PCLK做参考时钟
+
+	SSD2828WriteReg(0x00b9,0x00,0x01); //开PLL
+	Delay_ms(50);
+	
+	
+	
+		
+}
+
+void SSD2828_STOP(void)
+{
+
+	SSD2828GPIOConfig();
+	SSD_SHUT_0;
+    SSD_RESET_0;
+	SSD2828_IC1_CS_0();
+	SSD2828_IC2_CS_0(); 
+   	SPI_SDI_0;
+	SPI_SCLK_0;	 
+ }
+
+
+ void SSD2828_STOP_1(void)
+{
+
+	SSD2828GPIOConfig();
+	SSD_SHUT_1;
+    SSD_RESET_1;
+	SSD2828_IC1_CS_1();
+	SSD2828_IC2_CS_1(); 
+   	SPI_SDI_1;
+	SPI_SCLK_1;	 
+ }
+
+void SSD2828Init(void)
+{
+	SSD2828GPIOConfig();
+	
+	SSD_SHUT_1;
+    SSD_RESET_1;
+	SSD2828_IC1_CS_1();
+	SSD2828_IC2_CS_1(); 
+   	SPI_SDI_1;
+	SPI_SCLK_1;	
+
+
+
+	SSD_SHUT_0;
+
+    SSD_RESET_1;	//LCM SSD2828 RESET PIN
+	Delay_ms(50);
+    SSD_RESET_0;
+	Delay_ms(50);
+	SSD_RESET_1;
+	Delay_ms(50);
+
+	SSD2828_IC1_CS_0();
+	SSD2828_IC2_CS_0(); 
+
+
+
+
+	SSD2828WriteReg(0x00b9,0x00,0x00); //关pLL
+
+	SSD2828WriteReg(0x00b1,Lcd_VSPW, Lcd_HSPW);
+	SSD2828WriteReg(0x00b2, Lcd_VBPD+10, Lcd_HBPD);  // 6
+	SSD2828WriteReg(0x00b3,Lcd_VFPD, Lcd_HFPD);
+	if(Lcd_MODE == MIPI_SINGLE)
+	{ 
+		SSD2828WriteReg(0xb4,(Lcd_LCDH >> 8) & 0xff, Lcd_LCDH & 0xff);
+	}
+	else
+	{
+		SSD2828WriteReg(0xb4,((Lcd_LCDH/2) >> 8) & 0xff, (Lcd_LCDH/2) & 0xff);
+	}
+	SSD2828WriteReg(0xb5,(Lcd_LCDV >> 8) & 0xff, Lcd_LCDV & 0xff);
+	SSD2828WriteReg(0x00b6,0x00,0x0B);	//24bpp burst mode
+//	SSD2828WriteReg(0x00b6,0x00, 0x07);	//24bpp Non burst mode with sync events	
+//  SSD2828WriteReg(0x00b6,0x20, 0x07);	//24bpp Non burst mode PCLK下降沿锁存数据	
+
+	SSD2828WriteReg(0x00ba,0x80, 0x18);  // PLL= fIN X NS = xMHz	 251 ~ 500 
+//	SSD2828WriteReg(0x00ba,0xc1, 38);  // PLL= fIN X NS = xMHz	   501 ~ 1000
+//	SSD2828WriteReg(0x00ba,0xc2, 76);  // PLL= fIN/2 X NS = xMHz	   501 ~ 1000
+	SSD2828WriteReg(0x00bb,0x00,0x06);  // LP Mode CLK =PLL /(LPD+1)/8 = x MHz
+	SSD2828WriteReg(0x00b8,0x00,0x00); //
+
+	SSD2828WriteReg(0x00c9,0x23,0x02);
+	SSD2828WriteReg(0x00ca,0x23,0x01);
+	SSD2828WriteReg(0x00cb,0x05,0x10);
+	SSD2828WriteReg(0x00cc,0x10,0x05);
+
+	SSD2828WriteReg(0x00de,0x00,0x03);//4 lane mode
+//	SSD2828WriteReg(0x00de,0x00,0x01);//2 lane mode
+//	SSD2828WriteReg(0x00d6,0x00,0x04); ////设置RGB顺序?? 在视频模式下消隐期间发送的数据包的数量
+	SSD2828WriteReg(0x00d6,0x00,0x04);//设置RGB顺序?? 在视频模式下消隐期间发送的数据包的数量
+	SSD2828WriteReg(0x00c4,0x00,0x01); //Automatically perform BTA after the next write packe
+	//SSD2828WriteReg(0x00e9,0xff2f); //
+	SSD2828WriteReg(0x00eb,0x80,0x00);
+
+	Delay_ms(10);
+
+	SSD2828WriteReg(0x00b9,0x00,0x01); //开PLL
+	Delay_ms(120);
+
+
+}
+
+void SSD2828_RST_H(void)
+{
+	SSD_RESET_1;
+}
+
+void SSD2828_RST_L(void)
+{
+	SSD_RESET_0;
+}
+
+//片選2828 IC1
+void SSD2828_IC1_CS_0(void)
+{
+	GPIO_ResetBits(GPIOE, GPIO_Pin_6);
+}	  
+
+void SSD2828_IC1_CS_1(void)
+{
+	GPIO_SetBits(GPIOE, GPIO_Pin_6);
+}
+
+void SSD2828_IC2_CS_0(void) 
+{
+	GPIO_ResetBits(GPIOB, GPIO_Pin_5);
+}
+
+void SSD2828_IC2_CS_1(void) 
+{
+	GPIO_SetBits(GPIOB, GPIO_Pin_5);
+}
+
+
+
+//------以新名称重新定义mipi读写函数，便于直观的从DT值选择相应的函数------//
+
+/*
+*名称：WR_DT29
+*说明：DT=0x29的写操作，原型是SSD2828GenericLongWrite(unsigned long n)
+*/
+void WR_DT29(unsigned long n) {SSD2828GenericLongWrite(n);}
+
+/*
+*名称：WR_DT03_13_23
+*说明：DT=0x03, 0x13, 0x23的写操作，原型是SSD2828GenericShortWrite(unsigned char n)
+*/
+void WR_DT03_13_23(unsigned char n) {SSD2828GenericShortWrite(n);}   
+
+/*
+*名称：WR_DT39
+*说明：DT=0X39的写操作，原型是SSD2828DcsLongWrite(unsigned long n)
+*/
+void WR_DT39(unsigned long n) {SSD2828DcsLongWrite(n);}
+
+/*
+*名称：WR_DT05_15
+*说明：DT=0X05, 0X15的写操作，原型是SSD2828DcsShortWrite(unsigned char n)
+*/
+void WR_DT05_15(unsigned char n) {SSD2828DcsShortWrite(n);}
+
+/*
+*名称：RD_DT06
+*说明：DT=0X06 的读操作，原型是SSD2828DcsReadDT06(uint8_t adr, uint16_t l, uint8_t *p)
+*/
+unsigned int RD_DT06(uint8_t adr, uint16_t l, uint8_t *p) {return SSD2828DcsReadDT06(adr, l, p);}
+
+
+/*
+*名称：RD_DT14
+*说明：DT=0X14 的读操作，原型是SSD2828GenericReadDT14(uint8_t adr, uint16_t l, uint8_t *p)
+*/
+unsigned int RD_DT14(uint8_t adr, uint16_t l, uint8_t *p) {return SSD2828GenericReadDT14(adr, l, p);}
+
+

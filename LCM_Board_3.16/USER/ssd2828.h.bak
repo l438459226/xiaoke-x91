@@ -1,0 +1,136 @@
+
+
+#ifndef _SSD2828_H_
+#define _SSD2828_H_
+
+#include "stm32f10x.h"
+#include "SysTick.h"
+#include "lcd_drv.h"
+
+///////////////////////////////////////////////////////////////////////////////
+#define MIPI_READ_FAIL 0X01	          //讀失敗 是通信失敗
+#define MIPI_READ_SUCCEED 0X00		  //讀成功 是通信成功，並不能說明讀出來的值就是對的值
+							  
+///////////////////////////////////////////////////////////////////////////////
+
+void SSD2828_RST_H(void);
+void SSD2828_RST_L(void);
+
+void SSD2828_IC1_CS_0(void);
+void SSD2828_IC1_CS_1(void);
+void SSD2828_IC2_CS_0(void);
+void SSD2828_IC2_CS_1(void);
+void SSD2828Init(void);
+void SSD2828Video(void);
+void SSD2828LP(void);
+void SSD2828_STOP(void);
+void SSD2828_STOP_1(void);
+/*
+*函数名 : SSD2828GenericLongWrite
+*描述   : DT = 0x29的写操作设置
+*参数   : n - 写的字节数
+*返回   : 无
+*/
+void SSD2828GenericLongWrite(unsigned long n);
+
+/*
+*函数名 : SSD2828GenericShortWrite
+*描述   : DT = 0x03, 0x13, 0x23的写操作设置
+*参数   : n 写的字节数
+*返回   : 无
+*/
+void SSD2828GenericShortWrite(unsigned char n);
+
+/*
+*函数名 : SSD2828DcsLongWrite
+*描述   : DT = 0X39的写操作设置
+*参数   : n 写的字节数
+*返回   : 无
+*/
+void SSD2828DcsLongWrite(unsigned long n);
+
+/*
+*函数名 : SSD2828DcsLongWrite
+*描述   : DT = 0x05, 0x15的写操作设置
+*参数   : n 写的字节数
+*返回   : 无
+*/	  
+void SSD2828DcsShortWrite(unsigned char n);
+
+/*
+*函数名 : SSD2828DcsReadDT06
+*描述   : DCS READ, no parameters DT=0X06
+*参数   : adr - LCM 驱动IC寄存器地址
+          l   - 讀的长度 单位Byte
+		  p   - 保存读出的数据的数组
+*返回   : 讀狀態 成功或失敗
+          MIPI_READ_FAIL 讀失敗
+		  MIPI_READ_SUCCEED 讀成功
+*调用   : 外部调用
+*/
+unsigned int SSD2828DcsReadDT06(uint8_t adr, uint16_t l, uint8_t *p);
+
+/*
+*函数名 : SSD2828GenericReadDT14
+*描述   : Generic READ, 1 parameter; DT=0X14
+*参数   : adr - LCM 驱动IC寄存器地址
+          l   - 讀的长度 单位Byte
+		  p   - 保存读出的数据的数组
+*返回   : 讀狀態 成功或失敗
+          MIPI_READ_FAIL 讀失敗
+		  MIPI_READ_SUCCEED 讀成功
+*调用   : 外部调用
+*/
+unsigned int SSD2828GenericReadDT14(uint8_t adr, uint16_t l, uint8_t *p);
+
+/*2828底层写操作*/
+void SSD2828WriteData(unsigned char dat);
+void SSD2828WriteCmd(unsigned char cmd);
+void SSD2828WriteReg(unsigned char cmd,unsigned char dat1,unsigned char dat2);
+
+
+
+//------以新名称重新定义mipi读写函数，便于直观的从DT值选择相应的函数------//
+
+/*
+*名称：WR_DT29
+*说明：DT=0x29的写操作，原型是SSD2828GenericLongWrite(unsigned long n)
+*/
+void WR_DT29(unsigned long n);
+
+/*
+*名称：WR_DT03_13_23
+*说明：DT=0x03, 0x13, 0x23的写操作，原型是SSD2828GenericShortWrite(unsigned char n)
+*/
+void WR_DT03_13_23(unsigned char n); 
+
+/*
+*名称：WR_DT39
+*说明：DT=0X39的写操作，原型是SSD2828DcsLongWrite(unsigned long n)
+*/
+void WR_DT39(unsigned long n);
+
+/*
+*名称：WR_DT05_15
+*说明：DT=0X05, 0X15的写操作，原型是SSD2828DcsShortWrite(unsigned char n)
+*/
+void WR_DT05_15(unsigned char n);
+
+/*
+*名称：RD_DT06
+*说明：DT=0X06 的读操作，原型是SSD2828DcsReadDT06(uint8_t adr, uint16_t l, uint8_t *p)
+*/
+unsigned int RD_DT06(uint8_t adr, uint16_t l, uint8_t *p);
+
+
+/*
+*名称：RD_DT14
+*说明：DT=0X14 的读操作，原型是SSD2828GenericReadDT14(uint8_t adr, uint16_t l, uint8_t *p)
+*/
+unsigned int RD_DT14(uint8_t adr, uint16_t l, uint8_t *p);
+
+
+
+#endif
+
+
